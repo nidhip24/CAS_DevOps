@@ -1,0 +1,18 @@
+source venv/bin/activate
+pytest src/tests/ -s -vv --tb=line
+
+fastapi dev src/main.py
+
+
+
+docker run -d   --name watchtower   --restart always   -v /var/run/docker.sock:/var/run/docker.sock   containrrr/watchtower   --cleanup   --interval 30   cas_app
+
+docker run --rm --privileged tonistiigi/binfmt --install all
+
+
+docker run --platform linux/amd64 -d --name cas_app   -p 8000:8000 --env-file /root/cas/.env.test   nidhip24/cas:latest
+
+
+docker buildx build --platform linux/amd64 -t nidhip24/cas:latest .
+
+docker run --platform linux/amd64 -d --name cas_app   -p 8000:8000 -p 3306:3306   --env-file /root/cas/.env.test   nidhip24/cas:latest

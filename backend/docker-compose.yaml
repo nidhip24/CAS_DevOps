@@ -1,0 +1,56 @@
+# version: "3.9"
+
+services:
+  app:
+    image: nidhip24/cas:latest  # Replace with your Docker Hub image name
+    container_name: cas_app
+    ports:
+      - "8000:8000"  # Map container's port 8000 to host's port 8000
+    env_file:
+      - .env.local  # Load environment variables
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_USER: cas_user
+      MYSQL_PASSWORD: cas_password
+      MYSQL_DATABASE: cas_db
+      MYSQL_HOST: db
+      MYSQL_PORT: 3306
+    restart: always  # Automatically restart the container if it stops
+    depends_on:
+      - db
+      - test-db
+    platform: linux/amd64
+
+  db:
+    image: mysql:8.0
+    container_name: cas_db
+    ports:
+      - "3307:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_USER: cas_user
+      MYSQL_PASSWORD: cas_password
+      MYSQL_DATABASE: cas_db
+    volumes:
+      - db:/var/lib/mysql  # Persist database data
+    platform: linux/amd64
+
+  test-db:
+    image: mysql:8.0
+    container_name: cas_db_test
+    ports:
+      - "3317:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_USER: cas_user
+      MYSQL_PASSWORD: cas_password
+      MYSQL_DATABASE: cas_db
+    volumes:
+      - test-db:/var/lib/mysql  # Persist database data
+    platform: linux/amd64
+
+volumes:
+  db:
+    driver: local
+  test-db:
+    driver: local

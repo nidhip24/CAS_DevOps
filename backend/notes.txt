@@ -1,0 +1,65 @@
+Database: CAS
+cas_user_role
+ id
+ name
+ timestamp
+
+cas_auth_method
+ id
+ name('plain', 'plain-jwt', 'google')
+ timestamp
+
+cas_app
+ id
+ uid
+ amid
+ name
+ client_id
+ secret
+ created_at
+ updated_at
+
+cas_user_data
+ id
+ rid
+ usesrname
+ password
+ source
+ created_at
+ updated_at
+
+cas_app_config
+ id
+ aid
+ metadata
+ created_at
+ updated_at
+
+cas_auth_user
+ id
+ aid
+ amid
+ username
+ password
+ is_blocked
+ created_at
+ updated_at
+
+cas_auth_trail
+ aid
+ auid
+ timestamp
+
+cas_auth_token
+ id
+ auid
+ token
+ expiry
+ created_at
+ updated_at
+
+
+
+
+python3.13 -m venv venv
+source venv/bin/activate

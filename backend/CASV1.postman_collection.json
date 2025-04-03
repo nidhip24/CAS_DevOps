@@ -1,0 +1,301 @@
+{
+	"info": {
+		"_postman_id": "a0030ee9-2a4c-48dd-ab86-f8233750c9b5",
+		"name": "CAS",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "33912255"
+	},
+	"item": [
+		{
+			"name": "Register",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"username\": \"admin@gmail.com\",\n  \"password\": \"admin\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://{{server}}/v1/api/user/register",
+					"protocol": "https",
+					"host": [
+						"{{server}}"
+					],
+					"path": [
+						"v1",
+						"api",
+						"user",
+						"register"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Login",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"const response = pm.response.json();",
+							"",
+							"// Save the access_token as a global variable",
+							"pm.globals.set(\"cas_access_token\", response.access_token);",
+							"",
+							"",
+							"// Log the saved token for debugging",
+							"console.log(\"Access token saved:\", response.access_token);",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "accept",
+						"value": "application/json"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/x-www-form-urlencoded"
+					}
+				],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "grant_type",
+							"value": "password",
+							"type": "text"
+						},
+						{
+							"key": "username",
+							"value": "admin@gmail.com",
+							"type": "text"
+						},
+						{
+							"key": "password",
+							"value": "admin",
+							"type": "text"
+						},
+						{
+							"key": "scope",
+							"value": "",
+							"type": "text",
+							"disabled": true
+						},
+						{
+							"key": "client_id",
+							"value": "string",
+							"type": "text",
+							"disabled": true
+						},
+						{
+							"key": "client_secret",
+							"value": "string",
+							"type": "text",
+							"disabled": true
+						}
+					]
+				},
+				"url": {
+					"raw": "https://{{server}}/v1/api/user/login",
+					"protocol": "https",
+					"host": [
+						"{{server}}"
+					],
+					"path": [
+						"v1",
+						"api",
+						"user",
+						"login"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "create app",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "accept",
+						"value": "application/json"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/x-www-form-urlencoded",
+						"disabled": true
+					},
+					{
+						"key": "Authorization",
+						"value": "{{cas_access_token}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"name\": \"samplev5\",\n    \"auth_method\": \"plain-jwt\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://{{server}}/v1/api/app/create",
+					"protocol": "https",
+					"host": [
+						"{{server}}"
+					],
+					"path": [
+						"v1",
+						"api",
+						"app",
+						"create"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "list apps",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "accept",
+						"value": "application/json"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/x-www-form-urlencoded",
+						"disabled": true
+					},
+					{
+						"key": "Authorization",
+						"value": "{{cas_access_token}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "https://{{server}}/v1/api/app/list",
+					"protocol": "https",
+					"host": [
+						"{{server}}"
+					],
+					"path": [
+						"v1",
+						"api",
+						"app",
+						"list"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "app user register",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "accept",
+						"value": "application/json"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/x-www-form-urlencoded",
+						"disabled": true
+					},
+					{
+						"key": "Authorization",
+						"value": "{{cas_access_token}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"client_id\": \"05053c8b-449f-4099-9b2c-5ea9f53d3cde\",\n    \"username\": \"appuser21\",\n    \"password\": \"password\",\n    \"auth_method\": \"plain\" \n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://{{server}}/v1/api/app/user/signup",
+					"protocol": "https",
+					"host": [
+						"{{server}}"
+					],
+					"path": [
+						"v1",
+						"api",
+						"app",
+						"user",
+						"signup"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "app user login",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "accept",
+						"value": "application/json"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/x-www-form-urlencoded",
+						"disabled": true
+					},
+					{
+						"key": "Authorization",
+						"value": "{{cas_access_token}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"client_id\": \"05053c8b-449f-4099-9b2c-5ea9f53d3cde\",\n     \"username\": \"appuser21\",\n    \"password\": \"password\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "https://{{server}}/v1/api/app/user/login",
+					"protocol": "https",
+					"host": [
+						"{{server}}"
+					],
+					"path": [
+						"v1",
+						"api",
+						"app",
+						"user",
+						"login"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

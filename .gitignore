@@ -1,0 +1,60 @@
+# General OS files
+.DS_Store
+Thumbs.db
+
+# Node/Vue.js specific
+node_modules/
+dist/
+*.log
+yarn.lock
+package-lock.json
+pnpm-lock.yaml
+.vite/
+.vscode/
+.npm/
+.eslintcache
+coverage/
+*.local
+*.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Python specific
+__pycache__/
+*.py[cod]
+*.sqlite3
+*.pyo
+*.pyd
+*.pyc
+*.pyo
+*.pyd
+*.pvm
+Pipfile.lock
+venv/
+.env
+*.env
+.mypy_cache/
+.pytest_cache/
+.tox/
+.coverage
+htmlcov/
+*.egg-info/
+pip-wheel-metadata/
+
+# Git-related
+*.swp
+.idea/
+*.sublime-workspace
+*.bak
+
+# Docker specific (if applicable)
+*.tar
+*.pid
+*.sock
+.envrc
+
+# Ignore build artifacts
+build/
+cache/
