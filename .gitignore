@@ -1,7 +1,9 @@
+# -------------------------
 # General OS files
 .DS_Store
 Thumbs.db
 
+# -------------------------
 # Node/Vue.js specific
 node_modules/
 dist/
@@ -21,6 +23,7 @@ coverage/
 .env.test.local
 .env.production.local
 
+# -------------------------
 # Python specific
 __pycache__/
 *.py[cod]
@@ -43,18 +46,37 @@ htmlcov/
 *.egg-info/
 pip-wheel-metadata/
 
+# -------------------------
 # Git-related
 *.swp
 .idea/
 *.sublime-workspace
 *.bak
 
-# Docker specific (if applicable)
+# -------------------------
+# Docker specific
 *.tar
 *.pid
 *.sock
 .envrc
 
+# -------------------------
 # Ignore build artifacts
 build/
 cache/
+
+# -------------------------
+# Terraform specific
+*.tfstate
+*.tfstate.*
+.crash
+.terraform/
+.terraform.lock.hcl
+terraform.tfvars
+terraform.tfvars.json
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraformrc
+terraform.rc
