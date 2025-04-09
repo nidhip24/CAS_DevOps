@@ -1,0 +1,68 @@
+---
+- name: Initialize Kubernetes Master
+  hosts: k8s_master
+  become: true
+  vars:
+    kubeadm_join_command: ""
+  tasks:
+    - name: Initialize Kubernetes cluster
+      command: kubeadm init --pod-network-cidr=10.244.0.0/16 --apiserver-advertise-address={{ master_public_ip }} --control-plane-endpoint={{ master_public_ip }}
+      register: kubeadm_init
+      args:
+        creates: /etc/kubernetes/admin.conf
+
+    - name: Extract kubeadm join command
+      set_fact:
+        kubeadm_join_command: "{{ kubeadm_init.stdout | regex_search('kubeadm join .+') }}"
+      when: kubeadm_init.stdout is defined
+
+    - name: Create .kube directory for ubuntu user
+      file:
+        path: /home/ubuntu/.kube
+        state: directory
+        owner: ubuntu
+        group: ubuntu
+        mode: 0755
+
+    - name: Copy admin.conf to ubuntu user's .kube directory
+      copy:
+        src: /etc/kubernetes/admin.conf
+        dest: /home/ubuntu/.kube/config
+        remote_src: yes
+        owner: ubuntu
+        group: ubuntu
+        mode: 0644
+
+    - name: Save join command to a file
+      copy:
+        content: "{{ kubeadm_join_command }}"
+        dest: /home/ubuntu/kubeadm_join_command
+        owner: ubuntu
+        group: ubuntu
+        mode: 0644
+
+    - name: Apply Flannel network plugin
+      command: kubectl apply -f https://raw.githubusercontent.com/flannel-io/flannel/master/Documentation/kube-flannel.yml
+      become_user: ubuntu
+      environment:
+        KUBECONFIG: /home/ubuntu/.kube/config
+
+- name: Join Worker Nodes to Kubernetes Cluster
+  hosts: k8s_worker
+  become: true
+  tasks:
+    - name: Copy join command from master
+      fetch:
+        src: /home/ubuntu/kubeadm_join_command
+        dest: /tmp/kubeadm_join_command
+        flat: yes
+
+    - name: Get join command
+      command: cat /tmp/kubeadm_join_command
+      register: join_command_output
+      changed_when: false
+
+    - name: Join the cluster
+      command: "{{ join_command_output.stdout }}"
+      args:
+        creates: /etc/kubernetes/kubelet.conf 
