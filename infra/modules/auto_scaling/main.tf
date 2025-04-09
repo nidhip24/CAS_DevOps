@@ -25,13 +25,11 @@ resource "aws_launch_template" "ui" {
   user_data = base64encode(<<-EOF
     #!/bin/bash
     yum update -y
-    yum install -y httpd
-    systemctl start httpd
-    systemctl enable httpd
-    echo "<h1>UI Server</h1>" > /var/www/html/index.html
-    
-    # Install additional UI application dependencies here
-    # ...
+    yum install -y epel-release
+    yum install -y ansible git
+    git clone <your_git_repo_url> /home/ec2-user/my-playbook-repo
+    cd /home/ec2-user/my-playbook-repo
+    ansible-playbook up.yaml
   EOF
   )
   
@@ -54,17 +52,11 @@ resource "aws_launch_template" "backend" {
   user_data = base64encode(<<-EOF
     #!/bin/bash
     yum update -y
-    yum install -y java-11-amazon-corretto-headless
-    
-    # Install additional backend application dependencies here
-    # ...
-    
-    # Start application server
-    echo "Backend server ready" > /tmp/backend-ready
-    
-    # Configure health check endpoint
-    mkdir -p /var/www/html
-    echo "OK" > /var/www/html/health
+    yum install -y epel-release
+    yum install -y ansible git
+    git clone https://github.com/nidhip24/CAS_DevOps /home/ec2-user/CAS_DevOps
+    cd /home/ec2-user/CAS_DevOps/infra_setup/
+    ansible-playbook up.yaml
   EOF
   )
   
