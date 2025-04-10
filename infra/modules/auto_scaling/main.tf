@@ -19,22 +19,34 @@ resource "aws_launch_template" "ui" {
   name_prefix   = "ui-"
   image_id      = data.aws_ami.ubuntu_24.id
   instance_type = var.ui_instance_type
-  
-  vpc_security_group_ids = [var.ui_sg_id]
+  key_name      = "demo-ec2"
   
   user_data = base64encode(<<-EOF
     #!/bin/bash
-    yum update -y
-    yum install -y epel-release
-    yum install -y ansible git python3-pip
-    pip3 install boto3 botocore
-    git clone https://github.com/nidhip24/CAS_DevOps /home/ec2-user/CAS_DevOps
-    cd /home/ec2-user/CAS_DevOps/infra_setup/
+    sudo apt-get update -y
+    sudo apt-get upgrade -y
+    sudo apt-get install -y ansible git python3-pip python3-venv
+    python3 -m venv /home/ubuntu/myenv
+    source /home/ubuntu/myenv/bin/activate
+    pip install boto3 botocore
+    git clone https://github.com/nidhip24/CAS_DevOps /home/ubuntu/CAS_DevOps
+    cd /home/ubuntu/CAS_DevOps/infra_setup/
     
   EOF
     # ansible-playbook k8s_docker_setup.yml
     # ansible-playbook k8s_cluster_init.yml
   )
+  
+  metadata_options {
+    http_endpoint               = "enabled"
+    http_tokens                 = "required"
+    http_put_response_hop_limit = 1
+  }
+  
+  network_interfaces {
+    associate_public_ip_address = true
+    security_groups             = [var.ui_sg_id]
+  }
   
   tag_specifications {
     resource_type = "instance"
@@ -50,23 +62,35 @@ resource "aws_launch_template" "backend" {
   name_prefix   = "backend-"
   image_id      = data.aws_ami.ubuntu_24.id
   instance_type = var.backend_instance_type
-  
-  vpc_security_group_ids = [var.backend_sg_id]
+  key_name      = "demo-ec2"
   
   user_data = base64encode(<<-EOF
     #!/bin/bash
-    yum update -y
-    yum install -y epel-release
-    yum install -y ansible git python3-pip
-    pip3 install boto3 botocore
-    git clone https://github.com/nidhip24/CAS_DevOps /home/ec2-user/CAS_DevOps
-    cd /home/ec2-user/CAS_DevOps/infra_setup/
+    sudo apt-get update -y
+    sudo apt-get upgrade -y
+    sudo apt-get install -y ansible git python3-pip python3-venv
+    python3 -m venv /home/ubuntu/myenv
+    source /home/ubuntu/myenv/bin/activate
+    pip install boto3 botocore
+    git clone https://github.com/nidhip24/CAS_DevOps /home/ubuntu/CAS_DevOps
+    cd /home/ubuntu/CAS_DevOps/infra_setup/
     
   EOF
 
     # ansible-playbook k8s_docker_setup.yml
     # ansible-playbook k8s_cluster_init.yml
   )
+  
+  metadata_options {
+    http_endpoint               = "enabled"
+    http_tokens                 = "required"
+    http_put_response_hop_limit = 1
+  }
+  
+  network_interfaces {
+    associate_public_ip_address = true
+    security_groups             = [var.backend_sg_id]
+  }
   
   tag_specifications {
     resource_type = "instance"
