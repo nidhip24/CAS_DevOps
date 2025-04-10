@@ -48,7 +48,7 @@
         KUBECONFIG: /home/ubuntu/.kube/config
 
 - name: Join Worker Nodes to Kubernetes Cluster
-  hosts: k8s_worker
+  hosts: localhost
   become: true
   tasks:
     - name: Copy join command from master

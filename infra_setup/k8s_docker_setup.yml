@@ -1,6 +1,6 @@
 ---
 - name: Install Docker and Kubernetes components
-  hosts: all
+  hosts: localhost
   become: true
   tasks:
     - name: Create required directories
