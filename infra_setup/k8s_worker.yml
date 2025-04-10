@@ -1,0 +1,21 @@
+---
+- name: Join Worker Nodes to Kubernetes Cluster
+  hosts: localhost
+  become: true
+  tasks:
+    - name: Copy join command from master
+      fetch:
+        src: /home/ubuntu/kubeadm_join_command
+        dest: /tmp/kubeadm_join_command
+        flat: yes
+
+    - name: Get join command
+      command: cat /tmp/kubeadm_join_command
+      register: join_command_output
+      changed_when: false
+
+    - name: Join the cluster
+      command: "{{ join_command_output.stdout }}"
+      args:
+        creates: /etc/kubernetes/kubelet.conf
+      when: join_command_output.stdout is defined and join_command_output.stdout != ""
