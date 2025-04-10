@@ -26,17 +26,21 @@ resource "aws_launch_template" "ui" {
     #!/bin/bash
     yum update -y
     yum install -y epel-release
-    yum install -y ansible git
-    git clone <your_git_repo_url> /home/ec2-user/my-playbook-repo
-    cd /home/ec2-user/my-playbook-repo
-    ansible-playbook up.yaml
+    yum install -y ansible git python3-pip
+    pip3 install boto3 botocore
+    git clone https://github.com/nidhip24/CAS_DevOps /home/ec2-user/CAS_DevOps
+    cd /home/ec2-user/CAS_DevOps/infra_setup/
+    
   EOF
+    # ansible-playbook k8s_docker_setup.yml
+    # ansible-playbook k8s_cluster_init.yml
   )
   
   tag_specifications {
     resource_type = "instance"
     tags = {
       Name = "ui-instance"
+      Role = "worker"
     }
   }
 }
@@ -53,17 +57,22 @@ resource "aws_launch_template" "backend" {
     #!/bin/bash
     yum update -y
     yum install -y epel-release
-    yum install -y ansible git
+    yum install -y ansible git python3-pip
+    pip3 install boto3 botocore
     git clone https://github.com/nidhip24/CAS_DevOps /home/ec2-user/CAS_DevOps
     cd /home/ec2-user/CAS_DevOps/infra_setup/
-    ansible-playbook up.yaml
+    
   EOF
+
+    # ansible-playbook k8s_docker_setup.yml
+    # ansible-playbook k8s_cluster_init.yml
   )
   
   tag_specifications {
     resource_type = "instance"
     tags = {
       Name = "backend-instance"
+      Role = "worker"
     }
   }
 }
