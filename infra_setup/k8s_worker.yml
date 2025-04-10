@@ -8,6 +8,8 @@
         src: /home/ubuntu/kubeadm_join_command
         dest: /tmp/kubeadm_join_command
         flat: yes
+      delegate_to: "{{ groups['k8s_master'][0] }}"
+      run_once: true
 
     - name: Get join command
       command: cat /tmp/kubeadm_join_command

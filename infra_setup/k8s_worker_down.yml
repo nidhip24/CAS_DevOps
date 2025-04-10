@@ -1,0 +1,56 @@
+---
+- name: Reset and remove worker nodes from Kubernetes cluster
+  hosts: localhost
+  become: true
+  vars:
+    kubeconfig_path: "/home/ubuntu/.kube/config"  # adjust if needed
+  tasks:
+    - name: Get this node's internal IP
+      shell: hostname -I | awk '{print $1}'
+      register: node_ip
+      changed_when: false
+
+    - name: Get Kubernetes node name from IP
+      shell: |
+        kubectl --kubeconfig={{ kubeconfig_path }} get nodes -o json | \
+        jq -r '.items[] | select(.status.addresses[]?.address=="{{ node_ip.stdout }}") | .metadata.name'
+      delegate_to: "{{ groups['k8s_master'][0] }}"
+      register: kube_node_name
+      changed_when: false
+
+    - name: Drain the node from master
+      shell: |
+        kubectl --kubeconfig={{ kubeconfig_path }} drain {{ kube_node_name.stdout }} --ignore-daemonsets --delete-emptydir-data
+      delegate_to: "{{ groups['k8s_master'][0] }}"
+      when: kube_node_name.stdout != ""
+      ignore_errors: yes
+
+    - name: Reset kubeadm
+      command: kubeadm reset -f
+
+    - name: Remove CNI configuration
+      file:
+        path: /etc/cni/net.d
+        state: absent
+
+    - name: Remove kubelet config
+      file:
+        path: /etc/kubernetes
+        state: absent
+
+    - name: Clean iptables rules
+      shell: |
+        iptables -F && iptables -t nat -F && iptables -t mangle -F && iptables -X
+      ignore_errors: true
+
+    - name: Restart containerd
+      systemd:
+        name: containerd
+        state: restarted
+        enabled: yes
+    
+    - name: Remove node from Kubernetes cluster
+      shell: |
+        kubectl --kubeconfig={{ kubeconfig_path }} delete node {{ kube_node_name.stdout }}
+      delegate_to: "{{ groups['k8s_master'][0] }}"
+      when: kube_node_name.stdout != ""

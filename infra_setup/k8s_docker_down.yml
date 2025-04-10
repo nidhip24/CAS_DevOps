@@ -1,0 +1,93 @@
+---
+- name: Uninstall Docker and Kubernetes components
+  hosts: localhost
+  become: true
+  gather_facts: no
+
+  tasks:
+    - name: Stop and disable kubelet
+      systemd:
+        name: kubelet
+        state: stopped
+        enabled: no
+
+    - name: Remove Kubernetes packages
+      apt:
+        name:
+          - kubelet
+          - kubeadm
+          - kubectl
+        state: absent
+        autoremove: yes
+
+    - name: Remove Kubernetes repository file
+      file:
+        path: /etc/apt/sources.list.d/kubernetes.list
+        state: absent
+
+    - name: Remove Kubernetes GPG key
+      file:
+        path: /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+        state: absent
+
+    - name: Stop and disable containerd
+      systemd:
+        name: containerd
+        state: stopped
+        enabled: no
+
+    - name: Remove containerd configuration
+      file:
+        path: /etc/containerd/config.toml
+        state: absent
+
+    - name: Stop and disable Docker
+      systemd:
+        name: docker
+        state: stopped
+        enabled: no
+
+    - name: Remove Docker packages
+      apt:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+        state: absent
+        autoremove: yes
+
+    - name: Remove Docker repository
+      file:
+        path: /etc/apt/sources.list.d/docker.list
+        state: absent
+
+    - name: Remove Docker GPG key
+      file:
+        path: /etc/apt/keyrings/docker.gpg
+        state: absent
+
+    - name: Clean up kernel modules
+      file:
+        path: /etc/modules-load.d/k8s.conf
+        state: absent
+
+    - name: Restore swap in fstab
+      replace:
+        path: /etc/fstab
+        regexp: '^# (.*?\sswap\ssw\s.*)$'
+        replace: '\1'
+
+    - name: Enable swap
+      command: swapon -a
+      changed_when: false
+
+    - name: Reset kernel parameters
+      sysctl:
+        name: "{{ item }}"
+        state: absent
+        sysctl_set: yes
+        reload: yes
+      loop:
+        - net.bridge.bridge-nf-call-iptables
+        - net.bridge.bridge-nf-call-ip6tables
+        - net.ipv4.ip_forward

@@ -18,8 +18,7 @@
       set_fact:
         docker_ubuntu_codename: "{{ 'jammy' if ansible_distribution_release == 'noble' else ansible_distribution_release }}"
 
-    # Docker Installation
-    - name: Install Docker dependencies
+    - name: Install base dependencies
       apt:
         name:
           - apt-transport-https
@@ -29,7 +28,6 @@
           - lsb-release
           - software-properties-common
         state: present
-        update_cache: yes
 
     - name: Download Docker GPG key
       shell: |
@@ -37,11 +35,28 @@
       args:
         creates: /etc/apt/keyrings/docker.gpg
 
-    - name: Add Docker repository
+    - name: Add Docker repository (defer cache update)
       apt_repository:
         repo: "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu {{ docker_ubuntu_codename }} stable"
         filename: docker
         state: present
+        update_cache: no
+
+    - name: Download Kubernetes GPG key
+      shell: |
+        curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.29/deb/Release.key | gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+      args:
+        creates: /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+
+    - name: Add Kubernetes repository
+      apt_repository:
+        repo: "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.29/deb/ /"
+        filename: kubernetes.list
+        state: present
+
+    - name: Update apt cache after adding Docker and Kubernetes repositories
+      apt:
+        update_cache: yes
 
     - name: Install Docker and containerd
       apt:
@@ -50,7 +65,6 @@
           - docker-ce-cli
           - containerd.io
         state: present
-        update_cache: yes
 
     - name: Ensure Docker service is enabled and running
       systemd:
@@ -58,28 +72,19 @@
         state: started
         enabled: yes
 
-    # Configure containerd for Kubernetes
-    - name: Generate containerd config if not present
-      shell: |
-        containerd config default > /etc/containerd/config.toml
+    - name: Generate default containerd config
+      shell: containerd config default > /etc/containerd/config.toml
       args:
         creates: /etc/containerd/config.toml
 
-    - name: Ensure SystemdCgroup = true in containerd config
-      blockinfile:
+    - name: Enable SystemdCgroup in containerd config
+      replace:
         path: /etc/containerd/config.toml
-        marker: "# {mark} ANSIBLE MANAGED SYSTEMDCGROUP"
-        block: |
-          [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc.options]
-            SystemdCgroup = true
+        regexp: 'SystemdCgroup = false'
+        replace: 'SystemdCgroup = true'
+        backup: yes
+      notify: Restart containerd
 
-    - name: Restart containerd
-      systemd:
-        name: containerd
-        state: restarted
-        enabled: yes
-
-    # Kubernetes Setup
     - name: Disable swap
       command: swapoff -a
       changed_when: false
@@ -117,18 +122,6 @@
         - { name: 'net.bridge.bridge-nf-call-ip6tables', value: '1' }
         - { name: 'net.ipv4.ip_forward', value: '1' }
 
-    - name: Download Kubernetes GPG key
-      shell: |
-        curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.29/deb/Release.key | gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
-      args:
-        creates: /etc/apt/keyrings/kubernetes-apt-keyring.gpg
-
-    - name: Add Kubernetes repository
-      apt_repository:
-        repo: "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.29/deb/ /"
-        filename: kubernetes.list
-        state: present
-
     - name: Install Kubernetes components
       apt:
         name:
@@ -136,10 +129,16 @@
           - kubeadm
           - kubectl
         state: present
-        update_cache: yes
 
     - name: Enable and start kubelet
       systemd:
         name: kubelet
         state: started
+        enabled: yes
+
+  handlers:
+    - name: Restart containerd
+      systemd:
+        name: containerd
+        state: restarted
         enabled: yes
