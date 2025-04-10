@@ -1,7 +1,9 @@
 ---
-- name: Install Docker and Kubernetes components
+- name: Install Docker and Kubernetes components on master
   hosts: localhost
   become: true
+  gather_facts: yes
+
   tasks:
     - name: Create required directories
       file:
@@ -41,7 +43,7 @@
         filename: docker
         state: present
 
-    - name: Install Docker
+    - name: Install Docker and containerd
       apt:
         name:
           - docker-ce
@@ -57,29 +59,27 @@
         enabled: yes
 
     # Configure containerd for Kubernetes
-    - name: Create containerd config directory
-      file:
-        path: /etc/containerd
-        state: directory
-
-    - name: Configure containerd
+    - name: Generate containerd config if not present
       shell: |
         containerd config default > /etc/containerd/config.toml
       args:
         creates: /etc/containerd/config.toml
 
-    - name: Set SystemdCgroup to true in containerd config
-      replace:
+    - name: Ensure SystemdCgroup = true in containerd config
+      blockinfile:
         path: /etc/containerd/config.toml
-        regexp: 'SystemdCgroup = false'
-        replace: 'SystemdCgroup = true'
+        marker: "# {mark} ANSIBLE MANAGED SYSTEMDCGROUP"
+        block: |
+          [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runc.options]
+            SystemdCgroup = true
 
     - name: Restart containerd
       systemd:
         name: containerd
         state: restarted
+        enabled: yes
 
-    # Kubernetes Installation
+    # Kubernetes Setup
     - name: Disable swap
       command: swapoff -a
       changed_when: false
@@ -117,7 +117,7 @@
         - { name: 'net.bridge.bridge-nf-call-ip6tables', value: '1' }
         - { name: 'net.ipv4.ip_forward', value: '1' }
 
-    - name: Add Kubernetes GPG key
+    - name: Download Kubernetes GPG key
       shell: |
         curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.29/deb/Release.key | gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
       args:
