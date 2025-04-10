@@ -12,8 +12,12 @@
         - /etc/apt/keyrings
         - /etc/apt/sources.list.d
 
+    - name: Set Docker codename (use jammy for noble)
+      set_fact:
+        docker_ubuntu_codename: "{{ 'jammy' if ansible_distribution_release == 'noble' else ansible_distribution_release }}"
+
     # Docker Installation
-    - name: Install dependencies
+    - name: Install Docker dependencies
       apt:
         name:
           - apt-transport-https
@@ -25,14 +29,16 @@
         state: present
         update_cache: yes
 
-    - name: Add Docker GPG key
-      apt_key:
-        url: https://download.docker.com/linux/ubuntu/gpg
-        state: present
+    - name: Download Docker GPG key
+      shell: |
+        curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+      args:
+        creates: /etc/apt/keyrings/docker.gpg
 
     - name: Add Docker repository
       apt_repository:
-        repo: deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable
+        repo: "deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu {{ docker_ubuntu_codename }} stable"
+        filename: docker
         state: present
 
     - name: Install Docker
@@ -63,11 +69,10 @@
         creates: /etc/containerd/config.toml
 
     - name: Set SystemdCgroup to true in containerd config
-      lineinfile:
+      replace:
         path: /etc/containerd/config.toml
-        regexp: '^\s*SystemdCgroup = false'
-        line: '            SystemdCgroup = true'
-        state: present
+        regexp: 'SystemdCgroup = false'
+        replace: 'SystemdCgroup = true'
 
     - name: Restart containerd
       systemd:
@@ -93,6 +98,13 @@
         - overlay
         - br_netfilter
 
+    - name: Persist required kernel modules
+      copy:
+        dest: /etc/modules-load.d/k8s.conf
+        content: |
+          overlay
+          br_netfilter
+
     - name: Configure kernel parameters for Kubernetes
       sysctl:
         name: "{{ item.name }}"
@@ -105,16 +117,17 @@
         - { name: 'net.bridge.bridge-nf-call-ip6tables', value: '1' }
         - { name: 'net.ipv4.ip_forward', value: '1' }
 
-    - name: Add Kubernetes apt-key
-      apt_key:
-        url: https://pkgs.k8s.io/core:/stable:/v1.29/deb/Release.key
-        state: present
+    - name: Add Kubernetes GPG key
+      shell: |
+        curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.29/deb/Release.key | gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+      args:
+        creates: /etc/apt/keyrings/kubernetes-apt-keyring.gpg
 
     - name: Add Kubernetes repository
       apt_repository:
-        repo: deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.29/deb/ /
-        state: present
+        repo: "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.29/deb/ /"
         filename: kubernetes.list
+        state: present
 
     - name: Install Kubernetes components
       apt:
@@ -129,4 +142,4 @@
       systemd:
         name: kubelet
         state: started
-        enabled: yes 
+        enabled: yes
