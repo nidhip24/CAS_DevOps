@@ -20,18 +20,34 @@ resource "aws_launch_template" "ui" {
   image_id      = data.aws_ami.ubuntu_24.id
   instance_type = var.ui_instance_type
   key_name      = "demo-ec2"
+  iam_instance_profile {
+    name = "DemoEC2"  # Attach the IAM role
+  }
   
   user_data = base64encode(<<-EOF
     #!/bin/bash
     sudo apt-get update -y
     sudo apt-get upgrade -y
-    sudo apt-get install -y ansible git python3-pip python3-venv
+    sudo apt-get install -y ansible git python3-pip python3-venv sshpass unzip
+    export ANSIBLE_HOST_KEY_CHECKING=False
+    curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+    unzip awscliv2.zip
+    sudo ./aws/install
+
     python3 -m venv /home/ubuntu/myenv
     source /home/ubuntu/myenv/bin/activate
     pip install boto3 botocore
-    git clone https://github.com/nidhip24/CAS_DevOps /home/ubuntu/CAS_DevOps
-    cd /home/ubuntu/CAS_DevOps/infra_setup/
     
+    VAULT_PASS=$(aws ssm get-parameter --name "/ansible/vault-pass" --with-decryption --query Parameter.Value --output text --region us-east-1)
+    echo "$VAULT_PASS" > ~/.vault_pass.txt
+    chmod 600 ~/.vault_pass.txt
+
+    git clone https://github.com/nidhip24/CAS_DevOps /home/ubuntu/CAS_DevOps
+    cd /home/ubuntu/CAS_DevOps
+    git checkout 'feature/steup_infra'
+    cd infra_setup/
+    ansible-playbook k8s_docker_setup.yml
+    ansible-playbook -i inventory.ini k8s_worker.yml  --vault-password-file ~/.vault_pass.txt
   EOF
     # ansible-playbook k8s_docker_setup.yml
     # ansible-playbook k8s_cluster_init.yml
@@ -52,7 +68,7 @@ resource "aws_launch_template" "ui" {
     resource_type = "instance"
     tags = {
       Name = "ui-instance"
-      Role = "worker"
+      Role = "ui-worker"
     }
   }
 }
@@ -63,18 +79,34 @@ resource "aws_launch_template" "backend" {
   image_id      = data.aws_ami.ubuntu_24.id
   instance_type = var.backend_instance_type
   key_name      = "demo-ec2"
+  iam_instance_profile {
+    name = "DemoEC2"  # Attach the IAM role
+  }
   
   user_data = base64encode(<<-EOF
     #!/bin/bash
     sudo apt-get update -y
     sudo apt-get upgrade -y
-    sudo apt-get install -y ansible git python3-pip python3-venv
+    sudo apt-get install -y ansible git python3-pip python3-venv sshpass unzip
+    export ANSIBLE_HOST_KEY_CHECKING=False
+    curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+    unzip awscliv2.zip
+    sudo ./aws/install
+
     python3 -m venv /home/ubuntu/myenv
     source /home/ubuntu/myenv/bin/activate
     pip install boto3 botocore
-    git clone https://github.com/nidhip24/CAS_DevOps /home/ubuntu/CAS_DevOps
-    cd /home/ubuntu/CAS_DevOps/infra_setup/
     
+    VAULT_PASS=$(aws ssm get-parameter --name "/ansible/vault-pass" --with-decryption --query Parameter.Value --output text --region us-east-1)
+    echo "$VAULT_PASS" > /home/ubuntu/.vault_pass.txt
+    chmod 600 /home/ubuntu/.vault_pass.txt
+
+    git clone https://github.com/nidhip24/CAS_DevOps /home/ubuntu/CAS_DevOps
+    cd /home/ubuntu/CAS_DevOps
+    git checkout 'feature/steup_infra'
+    cd infra_setup/
+    ansible-playbook k8s_docker_setup.yml
+    ansible-playbook -i inventory.ini k8s_worker.yml  --vault-password-file ~/.vault_pass.txt
   EOF
 
     # ansible-playbook k8s_docker_setup.yml
@@ -96,7 +128,7 @@ resource "aws_launch_template" "backend" {
     resource_type = "instance"
     tags = {
       Name = "backend-instance"
-      Role = "worker"
+      Role = "backend-worker"
     }
   }
 }
