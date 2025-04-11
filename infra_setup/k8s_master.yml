@@ -5,10 +5,27 @@
   vars:
     kubeadm_join_command: ""
   tasks:
-    - name: Start and enable containerd
+    - name: Create containerd config directory
+      file:
+        path: /etc/containerd
+        state: directory
+        mode: '0755'
+
+    - name: Generate default containerd config
+      shell: containerd config default > /etc/containerd/config.toml
+      args:
+        creates: /etc/containerd/config.toml
+
+    - name: Set SystemdCgroup = true in containerd config
+      replace:
+        path: /etc/containerd/config.toml
+        regexp: 'SystemdCgroup = false'
+        replace: 'SystemdCgroup = true'
+
+    - name: Restart containerd to apply changes
       systemd:
         name: containerd
-        state: started
+        state: restarted
         enabled: yes
 
     - name: Start and enable kubelet
