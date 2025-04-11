@@ -15,8 +15,6 @@
 
     - name: Generate containerd default config
       shell: containerd config default | tee /etc/containerd/config.toml > /dev/null
-      args:
-        creates: /etc/containerd/config.toml
 
     - name: Enable systemd cgroup driver in containerd config
       replace:
