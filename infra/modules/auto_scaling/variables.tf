@@ -3,11 +3,6 @@ variable "vpc_id" {
   type        = string
 }
 
-variable "private_subnet_ids" {
-  description = "IDs of the private subnets"
-  type        = list(string)
-}
-
 variable "ui_sg_id" {
   description = "ID of the UI security group"
   type        = string
@@ -39,3 +34,8 @@ variable "backend_instance_type" {
   type        = string
   default     = "t3.micro"
 } 
+
+variable "public_subnet_ids" {
+  description = "List of public subnet IDs for deploying instances"
+  type        = list(string)
+}

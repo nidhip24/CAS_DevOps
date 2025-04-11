@@ -51,7 +51,7 @@ module "auto_scaling" {
   source = "./modules/auto_scaling"
   
   vpc_id                   = module.vpc.vpc_id
-  private_subnet_ids       = module.vpc.private_subnet_ids
+  public_subnet_ids        = module.vpc.public_subnet_ids
   ui_sg_id                 = module.security_groups.ui_sg_id
   backend_sg_id            = module.security_groups.backend_sg_id
   ui_target_group_arn      = module.load_balancers.ui_target_group_arn
