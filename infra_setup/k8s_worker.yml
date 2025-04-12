@@ -1,0 +1,88 @@
+---
+- name: Join Worker Nodes to Kubernetes Cluster and Label Based on EC2 Role (IMDSv2)
+  hosts: localhost
+  become: true
+  vars:
+    aws_region: us-east-1
+
+  tasks:
+    # --- containerd Setup ---
+    - name: Ensure /etc/containerd directory exists
+      file:
+        path: /etc/containerd
+        state: directory
+        mode: '0755'
+
+    - name: Generate containerd default config
+      shell: containerd config default | tee /etc/containerd/config.toml > /dev/null
+
+    - name: Enable systemd cgroup driver in containerd config
+      replace:
+        path: /etc/containerd/config.toml
+        regexp: 'SystemdCgroup = false'
+        replace: 'SystemdCgroup = true'
+
+    - name: Restart containerd service
+      systemd:
+        name: containerd
+        state: restarted
+        enabled: yes
+
+    - name: Wait for containerd socket to be available
+      wait_for:
+        path: /var/run/containerd/containerd.sock
+        state: present
+        timeout: 15
+
+    # --- Get join command from master ---
+    - name: Copy join command from master
+      fetch:
+        src: /home/ubuntu/kubeadm_join_command
+        dest: /tmp/kubeadm_join_command
+        flat: yes
+      delegate_to: "{{ groups['k8s_master'][0] }}"
+      run_once: true
+
+    - name: Get join command
+      command: cat /tmp/kubeadm_join_command
+      register: join_command_output
+      changed_when: false
+
+    # --- Get EC2 Role tag for labeling ---
+    - name: Get EC2 instance ID using IMDSv2
+      shell: |
+        TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token" \
+          -H "X-aws-ec2-metadata-token-ttl-seconds: 21600")
+        curl -H "X-aws-ec2-metadata-token: $TOKEN" \
+          http://169.254.169.254/latest/meta-data/instance-id
+      register: instance_id
+
+    - name: Get EC2 Role tag using AWS CLI
+      shell: |
+        aws ec2 describe-tags \
+          --region {{ aws_region }} \
+          --filters "Name=resource-id,Values={{ instance_id.stdout }}" "Name=key,Values=Role" \
+          --query "Tags[0].Value" --output text
+      register: ec2_role
+
+    # --- Pre-configure kubelet with node label ---
+    - name: Configure kubelet to register node with a role
+      lineinfile:
+        path: /etc/default/kubelet
+        line: 'KUBELET_EXTRA_ARGS="--node-labels=role={{ ec2_role.stdout }}"'
+        create: yes
+
+    - name: Reload systemd to pick up changes
+      shell: systemctl daemon-reexec
+
+    - name: Restart kubelet to apply label configuration
+      systemd:
+        name: kubelet
+        state: restarted
+
+    # --- Join Kubernetes cluster ---
+    - name: Join the Kubernetes cluster
+      command: "{{ join_command_output.stdout }}"
+      args:
+        creates: /etc/kubernetes/kubelet.conf
+      when: join_command_output.stdout is defined and join_command_output.stdout != ""

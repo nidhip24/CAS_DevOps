@@ -65,6 +65,8 @@ pip-wheel-metadata/
 build/
 cache/
 
+*.ini
+
 # -------------------------
 # Terraform specific
 *.tfstate
@@ -80,3 +82,4 @@ override.tf.json
 *_override.tf.json
 .terraformrc
 terraform.rc
+

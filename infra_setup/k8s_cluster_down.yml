@@ -1,0 +1,51 @@
+---
+- name: Reset Kubernetes Cluster
+  hosts: k8s_master
+  become: true
+  tasks:
+    - name: Reset Kubernetes using kubeadm
+      command: kubeadm reset -f
+
+    - name: Stop and disable kubelet
+      systemd:
+        name: kubelet
+        enabled: no
+        state: stopped
+
+    - name: Stop and disable containerd
+      systemd:
+        name: containerd
+        enabled: no
+        state: stopped
+
+    - name: Remove .kube directory (only on master)
+      file:
+        path: /home/ubuntu/.kube
+        state: absent
+      when: inventory_hostname in groups['k8s_master']
+
+    - name: Remove Kubernetes config from /etc/kubernetes
+      file:
+        path: /etc/kubernetes
+        state: absent
+
+    - name: Remove CNI network files
+      file:
+        path: /etc/cni/net.d
+        state: absent
+
+    - name: Remove kubelet config directory
+      file:
+        path: /var/lib/kubelet
+        state: absent
+
+    - name: Remove containerd state
+      file:
+        path: /var/lib/containerd
+        state: absent
+
+    - name: Remove the kubeadm join command file (only on master)
+      file:
+        path: /home/ubuntu/kubeadm_join_command
+        state: absent
+      when: inventory_hostname in groups['k8s_master']
