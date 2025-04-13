@@ -6,7 +6,7 @@ on:
       - feature/backend
     paths:
       - 'backend/**'
-  workflow_dispatch:
+  workflow_dispatch:  # Allow manual trigger
 
 jobs:
   deploy:
