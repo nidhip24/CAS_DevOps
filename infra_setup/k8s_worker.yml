@@ -48,7 +48,7 @@
       register: join_command_output
       changed_when: false
 
-    # --- Get EC2 instance metadata ---
+    # --- Get EC2 Role tag for labeling ---
     - name: Get EC2 instance ID using IMDSv2
       shell: |
         TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token" \
@@ -56,14 +56,6 @@
         curl -H "X-aws-ec2-metadata-token: $TOKEN" \
           http://169.254.169.254/latest/meta-data/instance-id
       register: instance_id
-
-    - name: Get public IP address of the EC2 instance
-      shell: |
-        TOKEN=$(curl -X PUT "http://169.254.169.254/latest/api/token" \
-          -H "X-aws-ec2-metadata-token-ttl-seconds: 21600")
-        curl -H "X-aws-ec2-metadata-token: $TOKEN" \
-          http://169.254.169.254/latest/meta-data/public-ipv4
-      register: public_ip
 
     - name: Get EC2 Role tag using AWS CLI
       shell: |
@@ -73,17 +65,17 @@
           --query "Tags[0].Value" --output text
       register: ec2_role
 
-    # --- Pre-configure kubelet with node label and public IP ---
-    - name: Configure kubelet to register node with label and public IP
+    # --- Pre-configure kubelet with node label ---
+    - name: Configure kubelet to register node with a role
       lineinfile:
         path: /etc/default/kubelet
-        line: 'KUBELET_EXTRA_ARGS="--node-labels=role={{ ec2_role.stdout }} --node-ip={{ public_ip.stdout }}"'
+        line: 'KUBELET_EXTRA_ARGS="--node-labels=role={{ ec2_role.stdout }}"'
         create: yes
 
     - name: Reload systemd to pick up changes
       shell: systemctl daemon-reexec
 
-    - name: Restart kubelet to apply label and IP configuration
+    - name: Restart kubelet to apply label configuration
       systemd:
         name: kubelet
         state: restarted
