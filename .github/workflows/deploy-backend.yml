@@ -68,6 +68,7 @@ jobs:
       # Step 3: Create .env.local file
       - name: Create .env.local
         run: |
+          > .env.local
           echo "PROJECT_NAME=${{ secrets.PROJECT_NAME }}" >> .env.local
           echo "API_VERSION=${{ secrets.API_VERSION }}" >> .env.local
           echo "ENV=${{ secrets.ENV }}" >> .env.local
