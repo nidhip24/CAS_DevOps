@@ -6,7 +6,7 @@ on:
       - feature/backend
     paths:
       - 'backend/**'
-  workflow_dispatch:  # Allow manual trigger
+  workflow_dispatch: {}  # Enables manual trigger via GitHub UI
 
 jobs:
   deploy:
