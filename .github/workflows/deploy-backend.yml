@@ -65,30 +65,30 @@ jobs:
       - name: Login to Docker Hub
         run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
-      # Step 3: Create .env.test file
-      - name: Create .env.test
+      # Step 3: Create .env.local file
+      - name: Create .env.local
         run: |
-          echo "PROJECT_NAME=${{ secrets.PROJECT_NAME }}" >> .env.test
-          echo "API_VERSION=${{ secrets.API_VERSION }}" >> .env.test
-          echo "ENV=${{ secrets.ENV }}" >> .env.test
-          echo "SECRET_KEY=${{ secrets.SECRET_KEY }}" >> .env.test
-          echo "ALGORITHM=${{ secrets.ALGORITHM }}" >> .env.test
+          echo "PROJECT_NAME=${{ secrets.PROJECT_NAME }}" >> .env.local
+          echo "API_VERSION=${{ secrets.API_VERSION }}" >> .env.local
+          echo "ENV=${{ secrets.ENV }}" >> .env.local
+          echo "SECRET_KEY=${{ secrets.SECRET_KEY }}" >> .env.local
+          echo "ALGORITHM=${{ secrets.ALGORITHM }}" >> .env.local
 
-          echo "ACCESS_TOKEN_EXPIRE_MINUTES=${{ secrets.ACCESS_TOKEN_EXPIRE_MINUTES }}" >> .env.test
-          echo "FIRST_SUPERUSER_USERNAME=${{ secrets.FIRST_SUPERUSER_USERNAME }}" >> .env.test
-          echo "FIRST_SUPERUSER_EMAIL=${{ secrets.FIRST_SUPERUSER_EMAIL }}" >> .env.test
-          echo "FIRST_SUPERUSER_PASSWORD=${{ secrets.FIRST_SUPERUSER_PASSWORD }}" >> .env.test
+          echo "ACCESS_TOKEN_EXPIRE_MINUTES=${{ secrets.ACCESS_TOKEN_EXPIRE_MINUTES }}" >> .env.local
+          echo "FIRST_SUPERUSER_USERNAME=${{ secrets.FIRST_SUPERUSER_USERNAME }}" >> .env.local
+          echo "FIRST_SUPERUSER_EMAIL=${{ secrets.FIRST_SUPERUSER_EMAIL }}" >> .env.local
+          echo "FIRST_SUPERUSER_PASSWORD=${{ secrets.FIRST_SUPERUSER_PASSWORD }}" >> .env.local
           
-          echo "MYSQL_USER=${{ secrets.MYSQL_USER }}" >> .env.test
-          echo "MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}" >> .env.test
-          echo "MYSQL_DB=${{ secrets.MYSQL_DB }}" >> .env.test
-          echo "MYSQL_PORT=${{ secrets.MYSQL_PORT }}" >> .env.test
-          echo "MYSQL_HOST=${{ secrets.MYSQL_HOST }}" >> .env.test
+          echo "MYSQL_USER=${{ secrets.MYSQL_USER }}" >> .env.local
+          echo "MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}" >> .env.local
+          echo "MYSQL_DB=${{ secrets.MYSQL_DB }}" >> .env.local
+          echo "MYSQL_PORT=${{ secrets.MYSQL_PORT }}" >> .env.local
+          echo "MYSQL_HOST=${{ secrets.MYSQL_HOST }}" >> .env.local
 
-          echo "SERVER_HOST=${{ secrets.SERVER_HOST }}" >> .env.test
-          echo "SERVER_PORT=${{ secrets.SERVER_PORT }}" >> .env.test
+          echo "SERVER_HOST=${{ secrets.SERVER_HOST }}" >> .env.local
+          echo "SERVER_PORT=${{ secrets.SERVER_PORT }}" >> .env.local
 
-          echo "PROTECTED_PATHS=${{ secrets.PROTECTED_PATHS }}" >> .env.test
+          echo "PROTECTED_PATHS=${{ secrets.PROTECTED_PATHS }}" >> .env.local
 
       # Step 4: Build the Docker image
       - name: Build Docker Image
