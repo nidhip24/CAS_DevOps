@@ -9,6 +9,95 @@ on:
   workflow_dispatch: {}  # Enables manual trigger via GitHub UI
 
 jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: ./backend
+
+    steps:
+      # Step 1: Checkout the repository
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Install Docker Compose
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker-compose
+
+      # Step 2: Build and start services
+      - name: Build and start services
+        run: docker-compose up --build -d
+
+      - name: List running containers
+        run: docker ps
+
+      - name: Wait for MySQL to initialize
+        run: sleep 15 # Adding a delay
+
+      # Step 4: Upgrade database to head
+      - name: Upgrade database
+        run: docker exec cas_app alembic upgrade head
+
+      # Step 5: Run tests
+      - name: Run tests
+        run: docker exec cas_app pytest tests/ -s -vv --tb=line
+
+      # Step 6: Tear down services
+      - name: Tear down services
+        run: docker-compose down --volumes
+
+  build:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: ./backend
+    
+    steps:
+      # Step 1: Checkout the code
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      # Step 2: Log in to Docker Hub
+      - name: Login to Docker Hub
+        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
+      # Step 3: Create .env.test file
+      - name: Create .env.test
+        run: |
+          echo "PROJECT_NAME=${{ secrets.PROJECT_NAME }}" >> .env.test
+          echo "API_VERSION=${{ secrets.API_VERSION }}" >> .env.test
+          echo "ENV=${{ secrets.ENV }}" >> .env.test
+          echo "SECRET_KEY=${{ secrets.SECRET_KEY }}" >> .env.test
+          echo "ALGORITHM=${{ secrets.ALGORITHM }}" >> .env.test
+
+          echo "ACCESS_TOKEN_EXPIRE_MINUTES=${{ secrets.ACCESS_TOKEN_EXPIRE_MINUTES }}" >> .env.test
+          echo "FIRST_SUPERUSER_USERNAME=${{ secrets.FIRST_SUPERUSER_USERNAME }}" >> .env.test
+          echo "FIRST_SUPERUSER_EMAIL=${{ secrets.FIRST_SUPERUSER_EMAIL }}" >> .env.test
+          echo "FIRST_SUPERUSER_PASSWORD=${{ secrets.FIRST_SUPERUSER_PASSWORD }}" >> .env.test
+          
+          echo "MYSQL_USER=${{ secrets.MYSQL_USER }}" >> .env.test
+          echo "MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}" >> .env.test
+          echo "MYSQL_DB=${{ secrets.MYSQL_DB }}" >> .env.test
+          echo "MYSQL_PORT=${{ secrets.MYSQL_PORT }}" >> .env.test
+          echo "MYSQL_HOST=${{ secrets.MYSQL_HOST }}" >> .env.test
+
+          echo "SERVER_HOST=${{ secrets.SERVER_HOST }}" >> .env.test
+          echo "SERVER_PORT=${{ secrets.SERVER_PORT }}" >> .env.test
+
+          echo "PROTECTED_PATHS=${{ secrets.PROTECTED_PATHS }}" >> .env.test
+
+      # Step 4: Build the Docker image
+      - name: Build Docker Image
+        run: |
+          docker build -t nidhip24/cas:latest .
+
+      # Step 5: Push the Docker image to Docker Hub
+      - name: Push Docker Image
+        run: docker push nidhip24/cas:latest
+
   deploy:
     runs-on: ubuntu-latest
 
