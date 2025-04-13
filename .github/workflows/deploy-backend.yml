@@ -93,11 +93,11 @@ jobs:
       # Step 4: Build the Docker image
       - name: Build Docker Image
         run: |
-          docker build -t nidhip24/cas:latest .
+          docker build -t nidhip24/cas:${{ github.sha }} .
 
       # Step 5: Push the Docker image to Docker Hub
       - name: Push Docker Image
-        run: docker push nidhip24/cas:latest
+        run: docker push nidhip24/cas:${{ github.sha }}
 
   deploy:
     runs-on: ubuntu-latest
@@ -117,6 +117,16 @@ jobs:
         echo "${{ secrets.KUBECONFIG }}" | base64 -d > kubeconfig
         echo "KUBECONFIG=$(pwd)/kubeconfig" >> $GITHUB_ENV
 
+    - name: Update deployment with image tag
+      run: |
+        export IMAGE_TAG=${{ github.sha }}
+        sed -i "s|nidhip24/cas:.*|nidhip24/cas:$IMAGE_TAG|g" k8s/backend-deployment.yaml
+
     - name: Deploy Backend
       run: |
         kubectl apply -f k8s/backend-deployment.yaml
+    
+    - name: Verify Rollout
+      run: |
+        kubectl rollout status deployment/backend-app
+
