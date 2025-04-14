@@ -34,18 +34,21 @@ resource "aws_launch_template" "ui" {
     unzip awscliv2.zip
     sudo ./aws/install
 
+    curl -fsSL https://tailscale.com/install.sh | sh
+    TS_AUTHKEY=$(aws ssm get-parameter --name "/tailscale/auth-key" --with-decryption --query Parameter.Value --output text --region us-east-1)
+
+    sudo tailscale up --authkey=${TS_AUTHKEY}
+
     python3 -m venv /home/ubuntu/myenv
     source /home/ubuntu/myenv/bin/activate
     pip install boto3 botocore
-    
+
     VAULT_PASS=$(aws ssm get-parameter --name "/ansible/vault-pass" --with-decryption --query Parameter.Value --output text --region us-east-1)
     echo "$VAULT_PASS" > /home/ubuntu/.vault_pass.txt
     chmod 600 /home/ubuntu/.vault_pass.txt
 
     git clone https://github.com/nidhip24/CAS_DevOps /home/ubuntu/CAS_DevOps
-    cd /home/ubuntu/CAS_DevOps
-    git checkout 'feature/steup_infra'
-    cd infra_setup/
+    cd /home/ubuntu/CAS_DevOps/infra_setup/
     ansible-playbook k8s_docker_setup.yml
     ansible-playbook -i inventory.ini k8s_worker.yml  --vault-password-file /home/ubuntu/.vault_pass.txt
   EOF
@@ -94,7 +97,9 @@ resource "aws_launch_template" "backend" {
     sudo ./aws/install
 
     curl -fsSL https://tailscale.com/install.sh | sh
-    sudo tailscale up --authkey tskey-auth-kpeDQEBvyu11CNTRL-2hdsDSkmr9VArQn7YqJi9VRGqfvfhdfEX
+    TS_AUTHKEY=$(aws ssm get-parameter --name "/tailscale/auth-key" --with-decryption --query Parameter.Value --output text --region us-east-1)
+
+    sudo tailscale up --authkey=${TS_AUTHKEY}
 
     python3 -m venv /home/ubuntu/myenv
     source /home/ubuntu/myenv/bin/activate
@@ -105,8 +110,7 @@ resource "aws_launch_template" "backend" {
     chmod 600 /home/ubuntu/.vault_pass.txt
 
     git clone https://github.com/nidhip24/CAS_DevOps /home/ubuntu/CAS_DevOps
-    cd /home/ubuntu/CAS_DevOps
-    cd infra_setup/
+    cd /home/ubuntu/CAS_DevOps/infra_setup/
     ansible-playbook k8s_docker_setup.yml
     ansible-playbook -i inventory.ini k8s_worker.yml  --vault-password-file /home/ubuntu/.vault_pass.txt
   EOF
