@@ -1,0 +1,133 @@
+name: Deploy Backend to K8s
+
+on:
+  push:
+    branches:
+      - feature/backend
+    paths:
+      - 'backend/**'
+  workflow_dispatch: {}  # Enables manual trigger via GitHub UI
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: ./backend
+
+    steps:
+      # Step 1: Checkout the repository
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Install Docker Compose
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker-compose
+
+      # Step 2: Build and start services
+      - name: Build and start services
+        run: docker-compose up --build -d
+
+      - name: List running containers
+        run: docker ps
+
+      - name: Wait for MySQL to initialize
+        run: sleep 15 # Adding a delay
+
+      # Step 4: Upgrade database to head
+      - name: Upgrade database
+        run: docker exec cas_app alembic upgrade head
+
+      # Step 5: Run tests
+      - name: Run tests
+        run: docker exec cas_app pytest tests/ -s -vv --tb=line
+
+      # Step 6: Tear down services
+      - name: Tear down services
+        run: docker-compose down --volumes
+
+  build:
+    runs-on: ubuntu-latest
+    needs: test
+
+    defaults:
+      run:
+        working-directory: ./backend
+    
+    steps:
+      # Step 1: Checkout the code
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      # Step 2: Log in to Docker Hub
+      - name: Login to Docker Hub
+        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
+      # Step 3: Create .env.local file
+      - name: Create .env.local
+        run: |
+          > .env.local
+          echo "PROJECT_NAME=${{ secrets.PROJECT_NAME }}" >> .env.local
+          echo "API_VERSION=${{ secrets.API_VERSION }}" >> .env.local
+          echo "ENV=${{ secrets.ENV }}" >> .env.local
+          echo "SECRET_KEY=${{ secrets.SECRET_KEY }}" >> .env.local
+          echo "ALGORITHM=${{ secrets.ALGORITHM }}" >> .env.local
+
+          echo "ACCESS_TOKEN_EXPIRE_MINUTES=${{ secrets.ACCESS_TOKEN_EXPIRE_MINUTES }}" >> .env.local
+          echo "FIRST_SUPERUSER_USERNAME=${{ secrets.FIRST_SUPERUSER_USERNAME }}" >> .env.local
+          echo "FIRST_SUPERUSER_EMAIL=${{ secrets.FIRST_SUPERUSER_EMAIL }}" >> .env.local
+          echo "FIRST_SUPERUSER_PASSWORD=${{ secrets.FIRST_SUPERUSER_PASSWORD }}" >> .env.local
+          
+          echo "MYSQL_USER=${{ secrets.MYSQL_USER }}" >> .env.local
+          echo "MYSQL_PASSWORD=${{ secrets.MYSQL_PASSWORD }}" >> .env.local
+          echo "MYSQL_DB=${{ secrets.MYSQL_DB }}" >> .env.local
+          echo "MYSQL_PORT=${{ secrets.MYSQL_PORT }}" >> .env.local
+          echo "MYSQL_HOST=${{ secrets.MYSQL_HOST }}" >> .env.local
+
+          echo "SERVER_HOST=${{ secrets.SERVER_HOST }}" >> .env.local
+          echo "SERVER_PORT=${{ secrets.SERVER_PORT }}" >> .env.local
+
+          echo "PROTECTED_PATHS=${{ secrets.PROTECTED_PATHS }}" >> .env.local
+
+      # Step 4: Build the Docker image
+      - name: Build Docker Image
+        run: |
+          docker build -t nidhip24/cas:${{ github.sha }} .
+
+      # Step 5: Push the Docker image to Docker Hub
+      - name: Push Docker Image
+        run: docker push nidhip24/cas:${{ github.sha }}
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up kubectl
+      uses: azure/setup-kubectl@v3
+      with:
+        version: 'v1.29.0'
+
+    - name: Configure Kubeconfig
+      run: |
+        echo "${{ secrets.KUBECONFIG }}" | base64 -d > kubeconfig
+        echo "KUBECONFIG=$(pwd)/kubeconfig" >> $GITHUB_ENV
+
+    - name: Update deployment with image tag
+      run: |
+        export IMAGE_TAG=${{ github.sha }}
+        sed -i "s|nidhip24/cas:.*|nidhip24/cas:$IMAGE_TAG|g" k8s/backend-deployment.yaml
+
+    - name: Deploy Backend
+      run: |
+        kubectl apply -f k8s/backend-deployment.yaml
+    
+    - name: Verify Rollout
+      run: |
+        kubectl rollout status deployment/backend-app
+

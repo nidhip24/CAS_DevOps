@@ -17,12 +17,8 @@ RUN pip install --no-cache-dir -r /app/requirements.txt
 # Copy application source code
 COPY . /app
 
-# Copy the wait-for-db script and ensure it has execute permissions
-COPY wait-for-db.sh /wait-for-db.sh
-RUN chmod +x /wait-for-db.sh
-
 # Expose the application port
 EXPOSE 8000
 
-# Command to wait for the database and start the application
-CMD ["#!/bin/bash", "-c", "/wait-for-db.sh && uvicorn src.main:app --host 0.0.0.0 --port 8000"]
+# Command to start the application
+CMD ["uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000"]

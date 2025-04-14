@@ -1,0 +1,54 @@
+---
+- name: Reset Kubernetes Master Node
+  hosts: localhost
+  become: true
+
+  tasks:
+    - name: Drain the node (if it's part of a cluster)
+      shell: |
+        kubectl drain {{ inventory_hostname }} --ignore-daemonsets --delete-emptydir-data || true
+      args:
+        warn: false
+      ignore_errors: true
+
+    - name: Reset Kubernetes cluster state
+      command: kubeadm reset -f
+
+    - name: Remove .kube directory for ubuntu user
+      file:
+        path: /home/ubuntu/.kube
+        state: absent
+
+    - name: Remove Kubernetes config
+      file:
+        path: /etc/kubernetes
+        state: absent
+
+    - name: Remove containerd config (optional cleanup)
+      file:
+        path: /etc/containerd/config.toml
+        state: absent
+
+    - name: Restart containerd
+      systemd:
+        name: containerd
+        state: restarted
+        enabled: yes
+
+    - name: Stop kubelet service
+      systemd:
+        name: kubelet
+        state: stopped
+        enabled: false
+
+    - name: Clean CNI config
+      file:
+        path: /etc/cni/net.d
+        state: absent
+
+    - name: Recreate empty CNI config directory
+      file:
+        path: /etc/cni/net.d
+        state: directory
+        mode: '0755'
+
