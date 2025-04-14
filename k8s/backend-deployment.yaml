@@ -25,9 +25,9 @@ spec:
               app: backend
       containers:
         - name: backend-container
-          image: nidhip24/cas:latest
+          image: nidhip24/cas:662788b203a853823d27c81a3c41b808606ddc24
           ports:
-            - containerPort: 8080
+            - containerPort: 8000
           resources:
             requests:
               cpu: "100m"
@@ -49,5 +49,5 @@ spec:
   ports:
     - protocol: TCP
       port: 80
-      targetPort: 8080
+      targetPort: 8000
   type: ClusterIP
