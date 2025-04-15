@@ -9,7 +9,7 @@ terraform {
       version = "~> 4.0"
     }
   }
-  
+
   backend "s3" {
     bucket  = "cas-terraform-states"
     key     = "terraform.tfstate"
@@ -21,7 +21,7 @@ terraform {
 # VPC and Network Infrastructure
 module "vpc" {
   source = "./modules/vpc"
-  
+
   vpc_cidr           = var.vpc_cidr
   availability_zones = var.availability_zones
   public_subnets     = var.public_subnets
@@ -32,14 +32,14 @@ module "vpc" {
 # Security Groups
 module "security_groups" {
   source = "./modules/security_groups"
-  
+
   vpc_id = module.vpc.vpc_id
 }
 
 # Load Balancers
 module "load_balancers" {
   source = "./modules/load_balancers"
-  
+
   vpc_id            = module.vpc.vpc_id
   public_subnet_ids = module.vpc.public_subnet_ids
   ui_sg_id          = module.security_groups.ui_sg_id
@@ -49,7 +49,7 @@ module "load_balancers" {
 # Auto Scaling Groups
 module "auto_scaling" {
   source = "./modules/auto_scaling"
-  
+
   vpc_id                   = module.vpc.vpc_id
   public_subnet_ids        = module.vpc.public_subnet_ids
   ui_sg_id                 = module.security_groups.ui_sg_id
@@ -63,7 +63,7 @@ module "auto_scaling" {
 # RDS Database
 module "rds" {
   source = "./modules/rds"
-  
+
   vpc_id              = module.vpc.vpc_id
   database_subnet_ids = module.vpc.database_subnet_ids
   db_sg_id            = module.security_groups.db_sg_id
@@ -76,6 +76,6 @@ module "rds" {
 # WAF Configuration
 module "waf" {
   source = "./modules/waf"
-  
+
   alb_arn = module.load_balancers.alb_arn
 } 
