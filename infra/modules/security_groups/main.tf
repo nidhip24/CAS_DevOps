@@ -21,6 +21,15 @@ resource "aws_security_group" "ui_sg" {
     description = "Allow HTTPS traffic"
   }
 
+  # Allow TCP port 10250
+  ingress {
+    from_port   = 10250
+    to_port     = 10250
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "Allow TCP port 10250"
+  }
+
   # Allow outbound traffic
   egress {
     from_port   = 0
@@ -56,6 +65,15 @@ resource "aws_security_group" "backend_sg" {
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
     description = "Allow SSH traffic"
+  }
+
+  # Allow TCP port 10250
+  ingress {
+    from_port   = 10250
+    to_port     = 10250
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "Allow TCP port 10250"
   }
 
   # Allow outbound traffic

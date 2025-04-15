@@ -15,9 +15,10 @@ resource "aws_lb" "ui_alb" {
 
 resource "aws_lb_target_group" "ui" {
   name     = "ui-target-group"
-  port     = 80
+  port     = 30080
   protocol = "HTTP"
   vpc_id   = var.vpc_id
+  target_type = "instance"
   
   health_check {
     path                = "/"
@@ -25,7 +26,7 @@ resource "aws_lb_target_group" "ui" {
     healthy_threshold   = 3
     unhealthy_threshold = 3
     timeout             = 5
-    interval            = 30
+    interval            = 300
     matcher             = "200-399"
   }
 }
@@ -73,9 +74,10 @@ resource "aws_lb" "backend_alb" {
 
 resource "aws_lb_target_group" "backend" {
   name     = "backend-target-group"
-  port     = 8080
+  port     = 30081
   protocol = "HTTP"
   vpc_id   = var.vpc_id
+  target_type = "instance"
   
   health_check {
     path                = "/health"
@@ -83,7 +85,7 @@ resource "aws_lb_target_group" "backend" {
     healthy_threshold   = 3
     unhealthy_threshold = 3
     timeout             = 5
-    interval            = 30
+    interval            = 300
     matcher             = "200-399"
   }
 }
