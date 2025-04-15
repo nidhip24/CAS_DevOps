@@ -139,5 +139,5 @@ jobs:
     - name: Bring down Tailscale
       if: always()
       run: |
-        sudo tailscale down
+        sudo tailscale logout
 
