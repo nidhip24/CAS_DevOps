@@ -39,11 +39,6 @@ jobs:
         with:
           terraform_version: 1.5.0
 
-      - name: Debug: Print tfvars
-        run: |
-          echo "--- terraform.tfvars ---"
-          cat terraform.tfvars
-
       - name: Terraform Init
         run: terraform init
 
@@ -57,6 +52,11 @@ jobs:
         shell: bash
         run: |
           echo "${{ secrets.TF_VARS_CONTENT }}" | sed 's/\r//' > terraform.tfvars
+
+      - name: Debug: Print tfvars
+        run: |
+          echo "--- terraform.tfvars ---"
+          cat terraform.tfvars
 
       - name: Terraform Plan
         run: terraform plan
