@@ -2,8 +2,11 @@ name: Deploy Frontend to K8s
 
 on:
   push:
-    branches:
-      - deploy/frontend
+    branches: [ deploy/frontend ]
+    paths:
+      - 'frontend/**'
+  pull_request:
+    branches: [ deploy/frontend ]
     paths:
       - 'frontend/**'
   workflow_dispatch: {}  # Enables manual trigger via GitHub UI

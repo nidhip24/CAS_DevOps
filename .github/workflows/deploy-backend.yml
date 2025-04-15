@@ -2,8 +2,11 @@ name: Deploy Backend to K8s
 
 on:
   push:
-    branches:
-      - deploy/backend
+    branches: [ deploy/backend ]
+    paths:
+      - 'backend/**'
+  pull_request:
+    branches: [ deploy/backend ]
     paths:
       - 'backend/**'
   workflow_dispatch: {}  # Enables manual trigger via GitHub UI
