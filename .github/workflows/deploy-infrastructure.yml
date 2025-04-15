@@ -53,7 +53,9 @@ jobs:
         run: terraform validate
       
       - name: Print tfvars file
-        run: cat terraform.tfvars
+        shell: bash
+        run: |
+          echo "${{ secrets.TF_VARS_CONTENT }}" | sed 's/\r//' > terraform.tfvars
 
       - name: Terraform Plan
         run: terraform plan
