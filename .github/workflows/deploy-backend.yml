@@ -113,6 +113,11 @@ jobs:
       with:
         version: 'v1.29.0'
 
+    - name: Install Tailscale
+      run: |
+        curl -fsSL https://tailscale.com/install.sh | sh
+        sudo tailscale up --authkey ${{ secrets.TAILSCALE_AUTHKEY }} --hostname gha-tailscale --accept-routes
+
     - name: Configure Kubeconfig
       run: |
         echo "${{ secrets.KUBECONFIG }}" | base64 -d > kubeconfig
@@ -130,4 +135,9 @@ jobs:
     - name: Verify Rollout
       run: |
         kubectl rollout status deployment/backend-app
+    
+    - name: Bring down Tailscale
+      if: always()
+      run: |
+        sudo tailscale down
 
