@@ -37,7 +37,7 @@ resource "aws_launch_template" "ui" {
     curl -fsSL https://tailscale.com/install.sh | sh
     TS_AUTHKEY=$(aws ssm get-parameter --name "/tailscale/auth-key" --with-decryption --query Parameter.Value --output text --region us-east-1)
 
-    sudo tailscale up --authkey=${TS_AUTHKEY}
+    sudo tailscale up --authkey=$TS_AUTHKEY
 
     python3 -m venv /home/ubuntu/myenv
     source /home/ubuntu/myenv/bin/activate
@@ -99,7 +99,7 @@ resource "aws_launch_template" "backend" {
     curl -fsSL https://tailscale.com/install.sh | sh
     TS_AUTHKEY=$(aws ssm get-parameter --name "/tailscale/auth-key" --with-decryption --query Parameter.Value --output text --region us-east-1)
 
-    sudo tailscale up --authkey=${TS_AUTHKEY}
+    sudo tailscale up --authkey=$TS_AUTHKEY
 
     python3 -m venv /home/ubuntu/myenv
     source /home/ubuntu/myenv/bin/activate
