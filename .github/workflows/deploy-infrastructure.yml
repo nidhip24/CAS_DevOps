@@ -52,7 +52,7 @@ jobs:
       - name: Terraform Validate
         run: terraform validate
       
-      - name: Debug: Print tfvars file
+      - name: Print tfvars file
         run: cat terraform.tfvars
 
       - name: Terraform Plan
