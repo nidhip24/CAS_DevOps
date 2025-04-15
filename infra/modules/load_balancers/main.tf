@@ -24,8 +24,8 @@ resource "aws_lb_target_group" "ui" {
     path                = "/"
     port                = "traffic-port"
     healthy_threshold   = 3
-    unhealthy_threshold = 3
-    timeout             = 5
+    unhealthy_threshold = 10
+    timeout             = 30
     interval            = 300
     matcher             = "200-399"
   }
@@ -83,8 +83,8 @@ resource "aws_lb_target_group" "backend" {
     path                = "/health"
     port                = "traffic-port"
     healthy_threshold   = 3
-    unhealthy_threshold = 3
-    timeout             = 5
+    unhealthy_threshold = 10
+    timeout             = 30
     interval            = 300
     matcher             = "200-399"
   }
