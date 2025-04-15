@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ngrok-config
+data:
+  ngrok.yml: |
+    version: "2"
+    authtoken: "<YOUR_TOKEN>"
+    tunnels:
+      gitea:
+        proto: http
+        addr: backend-service.default.svc.cluster.local:80
+        hostname: coherent-shrimp-nationally.ngrok-free.app
