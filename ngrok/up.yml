@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ngrok
+  labels:
+    app: ngrok
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ngrok
+  template:
+    metadata:
+      labels:
+        app: ngrok
+    spec:
+      volumes:
+        - name: config-volume
+          configMap:
+            name: ngrok-config
+      containers:
+      - name: ngrok
+        image: ngrok/ngrok:latest
+        ports:
+        - containerPort: 4040
+        volumeMounts:
+          - name: config-volume
+            mountPath: /etc/ngrok
+        args:
+          - "start"
+          - "--config=/etc/ngrok/ngrok.yml"
+          - "cas_backend"
