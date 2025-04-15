@@ -39,9 +39,10 @@ jobs:
         with:
           terraform_version: 1.5.0
 
-      - name: Write terraform.tfvars
+      - name: Debug: Print tfvars
         run: |
-          echo "${{ secrets.TF_VARS_BASE64 }}" | base64 -d > terraform.tfvars
+          echo "--- terraform.tfvars ---"
+          cat terraform.tfvars
 
       - name: Terraform Init
         run: terraform init
