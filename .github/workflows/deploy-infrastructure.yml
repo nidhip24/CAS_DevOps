@@ -41,7 +41,7 @@ jobs:
 
       - name: Write terraform.tfvars
         run: |
-          echo "${{ secrets.TF_VARS_CONTENT }}" > terraform.tfvars
+          printf "%s" "${{ secrets.TF_VARS_CONTENT }}" > terraform.tfvars
 
       - name: Terraform Init
         run: terraform init
