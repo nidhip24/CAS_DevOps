@@ -60,7 +60,7 @@ resource "aws_lb_listener" "ui_https" {
 # Internal Application Load Balancer for Backend
 resource "aws_lb" "backend_alb" {
   name               = "backend-alb"
-  internal           = true
+  internal           = false
   load_balancer_type = "application"
   security_groups    = [var.backend_sg_id]
   subnets            = var.public_subnet_ids
