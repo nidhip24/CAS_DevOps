@@ -51,12 +51,7 @@ jobs:
       - name: Print tfvars file
         shell: bash
         run: |
-          echo "${{ secrets.TF_VARS_CONTENT }}" | sed 's/\r//' > terraform.tfvars
-
-      - name: Debug: Print tfvars
-        run: |
-          echo "--- terraform.tfvars ---"
-          cat terraform.tfvars
+          echo "${{ secrets.TF_VARS_CONTENT }}" | base64 -d > terraform.tfvars
 
       - name: Terraform Plan
         run: terraform plan
