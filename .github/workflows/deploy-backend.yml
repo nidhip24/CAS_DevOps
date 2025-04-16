@@ -45,9 +45,13 @@ jobs:
 
       # Step 5: Run tests
       - name: Run tests
-        run: docker exec cas_app pytest tests/ -s -vv --tb=line
+        run: docker exec cas_app pytest tests/
 
-      # Step 6: Tear down services
+      # Step 6: Code coverage
+      - name: Code coverage
+        run: docker exec cas_app pytest --cov=src tests/
+
+      # Step 7: Tear down services
       - name: Tear down services
         run: docker-compose down --volumes
 
