@@ -24,7 +24,7 @@ spec:
                   name: mysql-secret
                   key: mysql-root-password
           volumeMounts:
-            - name: mysql-storage
+            - name: mysql-persistent-storage
               mountPath: /var/lib/mysql
             - name: init-script
               mountPath: /docker-entrypoint-initdb.d/cas.sql
