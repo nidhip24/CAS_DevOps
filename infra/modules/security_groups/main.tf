@@ -21,6 +21,15 @@ resource "aws_security_group" "ui_sg" {
     description = "Allow HTTPS traffic"
   }
 
+  # Allow NodePort for Kubernetes UI service
+  ingress {
+    from_port   = 30080
+    to_port     = 30080
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "Allow NodePort for Kubernetes UI service"
+  }
+
   # Allow TCP port 10250
   ingress {
     from_port   = 10250
@@ -59,6 +68,15 @@ resource "aws_security_group" "backend_sg" {
     description     = "Allow API traffic from UI"
   }
 
+  # Allow NodePort for Kubernetes backend service
+  ingress {
+    from_port   = 30081
+    to_port     = 30081
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "Allow NodePort for Kubernetes backend service"
+  }
+
   ingress {
     from_port   = 22
     to_port     = 22
@@ -74,6 +92,14 @@ resource "aws_security_group" "backend_sg" {
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
     description = "Allow TCP port 10250"
+  }
+
+  ingress {
+    from_port   = 8080
+    to_port     = 8080
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "Allow public access to backend ALB on port 8080"
   }
 
   # Allow outbound traffic
