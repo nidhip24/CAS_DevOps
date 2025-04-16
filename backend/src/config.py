@@ -30,11 +30,11 @@ class Settings(BaseSettings):
     SERVER_HOST: str
     SERVER_PORT: int
 
-    MYSQL_HOST: str
-    MYSQL_USER: str
-    MYSQL_PASSWORD: str
-    MYSQL_DB: str
-    MYSQL_PORT: int
+    NMYSQL_HOST: str
+    NMYSQL_USER: str
+    NMYSQL_PASSWORD: str
+    NMYSQL_DB: str
+    NMYSQL_PORT: int
 
     FIRST_SUPERUSER_USERNAME: str
     FIRST_SUPERUSER_EMAIL: EmailStr

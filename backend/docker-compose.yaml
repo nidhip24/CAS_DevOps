@@ -9,12 +9,12 @@ services:
     env_file:
       - .env.local  # Load environment variables
     environment:
-      MYSQL_ROOT_PASSWORD: root_password
-      MYSQL_USER: cas_user
-      MYSQL_PASSWORD: cas_password
-      MYSQL_DATABASE: cas_db
-      MYSQL_HOST: db
-      MYSQL_PORT: 3306
+      NMYSQL_ROOT_PASSWORD: root_password
+      NMYSQL_USER: cas_user
+      NMYSQL_PASSWORD: cas_password
+      NMYSQL_DATABASE: cas_db
+      NMYSQL_HOST: db
+      NMYSQL_PORT: 3306
     restart: always  # Automatically restart the container if it stops
     depends_on:
       - db

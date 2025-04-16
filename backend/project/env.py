@@ -57,19 +57,19 @@ target_metadata = combined_metadata
 
 section = config.config_ini_section
 config.set_section_option(
-    section, "MYSQL_USER", os.environ.get("MYSQL_USER", "gymhero")
+    section, "NMYSQL_USER", os.environ.get("NMYSQL_USER", "gymhero")
 )
 config.set_section_option(
-    section, "MYSQL_PASSWORD", os.environ.get("MYSQL_PASSWORD", "gymhero")
+    section, "NMYSQL_PASSWORD", os.environ.get("NMYSQL_PASSWORD", "gymhero")
 )
 config.set_section_option(
-    section, "MYSQL_HOST", os.environ.get("MYSQL_HOST", "localhost")
+    section, "NMYSQL_HOST", os.environ.get("NMYSQL_HOST", "localhost")
 )
 config.set_section_option(
-    section, "MYSQL_PORT", os.environ.get("MYSQL_PORT", "5432")
+    section, "NMYSQL_PORT", os.environ.get("NMYSQL_PORT", "5432")
 )
 config.set_section_option(
-    section, "MYSQL_DB", os.environ.get("MYSQL_DB", "workout")
+    section, "NMYSQL_DB", os.environ.get("NMYSQL_DB", "workout")
 )
 
 
