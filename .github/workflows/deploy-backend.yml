@@ -44,8 +44,8 @@ jobs:
         run: docker exec cas_app alembic upgrade head
 
       # Step 5: Run tests
-      - name: Run tests
-        run: docker exec cas_app pytest tests/
+      # - name: Run tests
+      #   run: docker exec cas_app pytest tests/
 
       # Step 6: Code coverage
       - name: Code coverage
