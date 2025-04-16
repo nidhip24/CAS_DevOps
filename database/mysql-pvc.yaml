@@ -5,6 +5,7 @@ metadata:
 spec:
   accessModes:
     - ReadWriteOnce
+  storageClassName: gp2  # or whatever matches your cloud
   resources:
     requests:
-      storage: 1Gi
+      storage: 2Gi
