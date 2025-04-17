@@ -1,0 +1,137 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: datadog-cluster-agent
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      app: datadog-cluster-agent
+  template:
+    metadata:
+      labels:
+        app: datadog-cluster-agent
+      name: datadog-agent
+    spec:
+      serviceAccountName: datadog-cluster-agent
+      containers:
+      - image: datadog/cluster-agent:latest
+        imagePullPolicy: Always
+        name: datadog-cluster-agent
+        env:
+          - name: DD_API_KEY
+            valueFrom:
+              secretKeyRef:
+                name: datadog-secret
+                key: api-key
+          - name: DD_APP_KEY
+            valueFrom:
+              secretKeyRef:
+                name: datadog-secret
+                key: app-key
+          - name: DD_COLLECT_KUBERNETES_EVENTS
+            value: "true"
+          - name: DD_LEADER_ELECTION
+            value: "true"
+          - name: DD_CLUSTER_AGENT_KUBERNETES_SERVICE_NAME
+            value: datadog-cluster-agent
+          # Set logging level
+          - name: DD_LOG_LEVEL
+            value: "INFO"
+          - name: DD_CLUSTER_NAME
+            value: "cas-cluster" # Replace with your cluster name
+        ports:
+        - containerPort: 5005
+          name: agentport
+          protocol: TCP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: datadog-cluster-agent
+  namespace: default
+spec:
+  selector:
+    app: datadog-cluster-agent
+  ports:
+  - port: 5005
+    protocol: TCP
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: datadog-cluster-agent
+  namespace: default
+---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: datadog-cluster-agent
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - services
+  - events
+  - endpoints
+  - pods
+  - nodes
+  - componentstatuses
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - "autoscaling"
+  resources:
+  - horizontalpodautoscalers
+  verbs:
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  resourceNames:
+  - datadogtoken
+  - datadog-leader-election
+  verbs:
+  - get
+  - update
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  verbs:
+  - create
+- apiGroups:
+  - "apps"
+  resources:
+  - deployments
+  - replicasets
+  verbs:
+  - list
+  - get
+  - watch
+- apiGroups:
+  - "batch"
+  resources:
+  - cronjobs
+  - jobs
+  verbs:
+  - list
+  - get
+  - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: datadog-cluster-agent
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: datadog-cluster-agent
+subjects:
+- kind: ServiceAccount
+  name: datadog-cluster-agent
+  namespace: default 

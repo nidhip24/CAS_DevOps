@@ -1,0 +1,182 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: datadog-agent
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      app: datadog-agent
+  template:
+    metadata:
+      labels:
+        app: datadog-agent
+      name: datadog-agent
+    spec:
+      serviceAccountName: datadog-agent
+      containers:
+      - image: datadog/agent:latest
+        imagePullPolicy: Always
+        name: datadog-agent
+        ports:
+          - containerPort: 8125
+            name: dogstatsdport
+            protocol: UDP
+          - containerPort: 8126
+            hostPort: 8126
+            name: traceport
+            protocol: TCP
+        env:
+          - name: DD_API_KEY
+            valueFrom:
+              secretKeyRef:
+                name: datadog-secret
+                key: api-key
+          - name: DD_COLLECT_KUBERNETES_EVENTS
+            value: "true"
+          - name: DD_LEADER_ELECTION
+            value: "true"
+          - name: KUBERNETES
+            value: "true"
+          - name: DD_KUBERNETES_KUBELET_HOST
+            valueFrom:
+              fieldRef:
+                fieldPath: status.hostIP
+          - name: DD_CLUSTER_AGENT_ENABLED
+            value: "true"
+          - name: DD_CLUSTER_AGENT_KUBERNETES_SERVICE_NAME
+            value: datadog-cluster-agent
+          # APM and processes
+          - name: DD_APM_ENABLED
+            value: "true"
+          - name: DD_PROCESS_AGENT_ENABLED
+            value: "true"
+          # Logs
+          - name: DD_LOGS_ENABLED
+            value: "true"
+          - name: DD_LOGS_CONFIG_CONTAINER_COLLECT_ALL
+            value: "true"
+          - name: DD_CONTAINER_EXCLUDE
+            value: "name:datadog-agent"
+          # Network monitoring
+          - name: DD_SYSTEM_PROBE_ENABLED
+            value: "true"
+          # Cluster name for tagging metrics
+          - name: DD_CLUSTER_NAME
+            value: "cas-cluster" # Replace with your cluster name
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 5555
+          initialDelaySeconds: 15
+          periodSeconds: 15
+          timeoutSeconds: 5
+          successThreshold: 1
+          failureThreshold: 3
+        volumeMounts:
+          - name: dockersocket
+            mountPath: /var/run/docker.sock
+          - name: proc
+            mountPath: /host/proc
+            readOnly: true
+          - name: cgroup
+            mountPath: /host/sys/fs/cgroup
+            readOnly: true
+          - name: debugfs
+            mountPath: /sys/kernel/debug
+          - name: pointdir
+            mountPath: /opt/datadog-agent/run
+          - name: logpodpath
+            mountPath: /var/log/pods
+          - name: logcontainerpath
+            mountPath: /var/lib/docker/containers
+      volumes:
+        - name: dockersocket
+          hostPath:
+            path: /var/run/docker.sock
+        - name: proc
+          hostPath:
+            path: /proc
+        - name: cgroup
+          hostPath:
+            path: /sys/fs/cgroup
+        - name: debugfs
+          hostPath:
+            path: /sys/kernel/debug
+        - name: pointdir
+          hostPath:
+            path: /opt/datadog-agent/run
+        - name: logpodpath
+          hostPath:
+            path: /var/log/pods
+        - name: logcontainerpath
+          hostPath:
+            path: /var/lib/docker/containers
+      tolerations:
+      - operator: Exists
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: datadog-agent
+  namespace: default
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: datadog-agent
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - services
+  - events
+  - endpoints
+  - pods
+  - nodes
+  - componentstatuses
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - nodes/metrics
+  - nodes/spec
+  - nodes/proxy
+  verbs:
+  - get
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  resourceNames:
+  - datadogtoken
+  - datadog-leader-election
+  verbs:
+  - get
+  - update
+- apiGroups:
+  - ""
+  resources:
+  - configmaps
+  verbs:
+  - create
+- nonResourceURLs:
+  - "/metrics"
+  verbs:
+  - get
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: datadog-agent
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: datadog-agent
+subjects:
+- kind: ServiceAccount
+  name: datadog-agent
+  namespace: default 

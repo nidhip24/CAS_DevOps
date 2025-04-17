@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: datadog-autodiscovery
+  namespace: default
+data:
+  mysql-integration.yaml: |-
+    init_config:
+
+    instances:
+      - host: "%%host%%"
+        port: "%%port%%"
+        username: "%%env_DD_MYSQL_USER%%"
+        password: "%%env_DD_MYSQL_PASS%%"
+        tags:
+          - "service:mysql"
+          - "env:%%env_DD_ENV%%" 
