@@ -21,9 +21,9 @@ def build_sqlalchemy_database_url_from_settings(_settings: Settings) -> str:
         str: The generated SQLAlchemy URL.
     """
     return (
-        f"mysql+mysqlconnector://{_settings.MYSQL_USER}:"
-        f"{_settings.MYSQL_PASSWORD}@{_settings.MYSQL_HOST}:"
-        f"{_settings.MYSQL_PORT}/{_settings.MYSQL_DB}"
+        f"mysql+mysqlconnector://{_settings.NMYSQL_USER}:"
+        f"{_settings.NMYSQL_PASSWORD}@{_settings.NMYSQL_HOST}:"
+        f"{_settings.NMYSQL_PORT}/{_settings.NMYSQL_DB}"
     )
 
 

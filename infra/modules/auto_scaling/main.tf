@@ -67,6 +67,16 @@ resource "aws_launch_template" "ui" {
     security_groups             = [var.ui_sg_id]
   }
   
+  block_device_mappings {
+    device_name = "/dev/sda1"
+    
+    ebs {
+      volume_size           = 15
+      volume_type           = "gp3"
+      delete_on_termination = true
+    }
+  }
+  
   tag_specifications {
     resource_type = "instance"
     tags = {
@@ -128,6 +138,16 @@ resource "aws_launch_template" "backend" {
   network_interfaces {
     associate_public_ip_address = true
     security_groups             = [var.backend_sg_id]
+  }
+  
+  block_device_mappings {
+    device_name = "/dev/sda1"
+    
+    ebs {
+      volume_size           = 15
+      volume_type           = "gp3"
+      delete_on_termination = true
+    }
   }
   
   tag_specifications {

@@ -1,5 +1,5 @@
 ---
-- name: Join Worker Nodes to Kubernetes Cluster and Label Based on EC2 Role (IMDSv2)
+- name: Join Worker Nodes to Kubernetes Cluster and Label Based on EC2 Role (IMDSv2) with Tailscale IP
   hosts: localhost
   become: true
   vars:
@@ -65,17 +65,24 @@
           --query "Tags[0].Value" --output text
       register: ec2_role
 
-    # --- Pre-configure kubelet with node label ---
-    - name: Configure kubelet to register node with a role
+    # --- Get Tailscale IP ---
+    - name: Get Tailscale IP address
+      shell: ip -4 addr show tailscale0 | grep -oP '(?<=inet\s)\d+(\.\d+){3}'
+      register: tailscale_ip
+      changed_when: false
+
+    # --- Configure kubelet with node label and Tailscale IP ---
+    - name: Configure kubelet to use Tailscale IP and register with role
       lineinfile:
         path: /etc/default/kubelet
-        line: 'KUBELET_EXTRA_ARGS="--node-labels=role={{ ec2_role.stdout }}"'
+        regexp: '^KUBELET_EXTRA_ARGS='
+        line: 'KUBELET_EXTRA_ARGS="--node-ip={{ tailscale_ip.stdout }} --node-labels=role={{ ec2_role.stdout }}"'
         create: yes
 
     - name: Reload systemd to pick up changes
       shell: systemctl daemon-reexec
 
-    - name: Restart kubelet to apply label configuration
+    - name: Restart kubelet to apply label and IP configuration
       systemd:
         name: kubelet
         state: restarted

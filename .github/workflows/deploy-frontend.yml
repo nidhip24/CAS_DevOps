@@ -2,8 +2,11 @@ name: Deploy Frontend to K8s
 
 on:
   push:
-    branches:
-      - deploy/frontend
+    branches: [ deploy/frontend ]
+    paths:
+      - 'frontend/**'
+  pull_request:
+    branches: [ deploy/frontend ]
     paths:
       - 'frontend/**'
   workflow_dispatch: {}  # Enables manual trigger via GitHub UI
@@ -62,13 +65,13 @@ jobs:
         export IMAGE_TAG=${{ github.sha }}
         sed -i "s|nidhip24/cas-frontend:.*|nidhip24/cas-frontend:$IMAGE_TAG|g" k8s/frontend-deployment.yaml
 
-    - name: Deploy Backend
+    - name: Deploy frontend
       run: |
-        kubectl apply -f k8s/backend-deployment.yaml
+        kubectl apply -f k8s/frontend-deployment.yaml
     
     - name: Verify Rollout
       run: |
-        kubectl rollout status deployment/backend-app
+        kubectl rollout status deployment/frontend-app
     
     - name: Bring down Tailscale
       if: always()

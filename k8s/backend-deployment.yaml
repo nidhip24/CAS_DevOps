@@ -5,7 +5,7 @@ metadata:
   labels:
     app: backend
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: backend
@@ -14,6 +14,7 @@ spec:
       labels:
         app: backend
     spec:
+      hostNetwork: true
       nodeSelector:
         role: backend-worker
       topologySpreadConstraints:
@@ -32,9 +33,11 @@ spec:
             requests:
               cpu: "100m"
               memory: "128Mi"
+              ephemeral-storage: "500Mi"
             limits:
               cpu: "500m"
               memory: "512Mi"
+              ephemeral-storage: "1Gi"
           env:
             - name: ENVIRONMENT
               value: "production"
@@ -50,4 +53,5 @@ spec:
     - protocol: TCP
       port: 80
       targetPort: 8000
-  type: ClusterIP
+      nodePort: 30081
+  type: NodePort

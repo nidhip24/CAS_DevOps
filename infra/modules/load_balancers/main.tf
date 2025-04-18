@@ -15,17 +15,18 @@ resource "aws_lb" "ui_alb" {
 
 resource "aws_lb_target_group" "ui" {
   name     = "ui-target-group"
-  port     = 80
+  port     = 30080
   protocol = "HTTP"
   vpc_id   = var.vpc_id
+  target_type = "instance"
   
   health_check {
     path                = "/"
     port                = "traffic-port"
     healthy_threshold   = 3
-    unhealthy_threshold = 3
-    timeout             = 5
-    interval            = 30
+    unhealthy_threshold = 10
+    timeout             = 30
+    interval            = 300
     matcher             = "200-399"
   }
 }
@@ -59,7 +60,7 @@ resource "aws_lb_listener" "ui_https" {
 # Internal Application Load Balancer for Backend
 resource "aws_lb" "backend_alb" {
   name               = "backend-alb"
-  internal           = true
+  internal           = false
   load_balancer_type = "application"
   security_groups    = [var.backend_sg_id]
   subnets            = var.public_subnet_ids
@@ -73,17 +74,18 @@ resource "aws_lb" "backend_alb" {
 
 resource "aws_lb_target_group" "backend" {
   name     = "backend-target-group"
-  port     = 8080
+  port     = 30081
   protocol = "HTTP"
   vpc_id   = var.vpc_id
+  target_type = "instance"
   
   health_check {
     path                = "/health"
     port                = "traffic-port"
     healthy_threshold   = 3
-    unhealthy_threshold = 3
-    timeout             = 5
-    interval            = 30
+    unhealthy_threshold = 10
+    timeout             = 30
+    interval            = 300
     matcher             = "200-399"
   }
 }
