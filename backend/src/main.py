@@ -55,3 +55,11 @@ app.include_router(app_user, prefix="/v1/api/app/user", tags=["apps_users"])
 # @app.get("/")
 # def root():
 #     return {"Hello": "World"}
+
+@app.get("/")
+def root():
+    return {"status": "healthy"}
+
+@app.get("/health")
+def health():
+    return {"status": "healthy"}

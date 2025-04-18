@@ -6,7 +6,7 @@ import { useRouter } from 'vue-router';
 
 const router = useRouter();
 
-const API_URL = "https://coherent-shrimp-nationally.ngrok-free.app/v1"
+const API_URL = "http://backend-alb-223667824.us-east-1.elb.amazonaws.com:8080/v1"
 
 export const useAppStore = defineStore('app', {
   state: () => ({
